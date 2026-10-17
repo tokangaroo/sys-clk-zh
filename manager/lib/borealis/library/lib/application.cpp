@@ -244,6 +244,16 @@ bool Application::init(std::string title, Style style, Theme theme)
             nvgAddFallbackFontId(Application::vg, Application::fontStash.regular, Application::fontStash.korean);
         }
 
+        // Simplified Chinese font (本地化中文界面必需，否则中文字形会缺失)
+        rc = plGetSharedFontByType(&font, PlSharedFontType_ChineseSimplified);
+        if (R_SUCCEEDED(rc))
+        {
+            Logger::info("Adding Switch shared Chinese font");
+            int chineseFont = Application::loadFontFromMemory("chinese", font.address, font.size, false);
+            if (chineseFont > 0)
+                nvgAddFallbackFontId(Application::vg, Application::fontStash.regular, chineseFont);
+        }
+
         // Extented font
         rc = plGetSharedFontByType(&font, PlSharedFontType_NintendoExt);
         if (R_SUCCEEDED(rc))
@@ -766,7 +776,7 @@ void Application::pushView(View* view, ViewAnimation animation)
     bool fadeOut = last && !last->isTranslucent() && !view->isTranslucent(); // play the fade out animation?
     bool wait    = animation == ViewAnimation::FADE; // wait for the old view animation to be done before showing the new one?
 
-    view->registerAction("Exit", Key::PLUS, [] { Application::quit(); return true; });
+    view->registerAction("退出", Key::PLUS, [] { Application::quit(); return true; });
     view->registerAction(
         "FPS", Key::MINUS, [] { Application::toggleFramerateDisplay(); return true; }, true);
 

@@ -31,7 +31,7 @@ Dialog::Dialog(View* contentView)
     if (contentView)
         contentView->setParent(this);
 
-    this->registerAction("Back", Key::B, [this] { return this->onCancel(); });
+    this->registerAction("返回", Key::B, [this] { return this->onCancel(); });
 }
 
 Dialog::Dialog(std::string text)

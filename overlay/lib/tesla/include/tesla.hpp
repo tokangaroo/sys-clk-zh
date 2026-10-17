@@ -1129,7 +1129,13 @@ namespace tsl {
                         TSL_R_TRY(plGetSharedFontByType(&localFontData, PlSharedFontType_ChineseTraditional));
                         break;
                     default:
-                        this->m_hasLocalFont = false; 
+                        // 兜底：系统语言不是中文时也尝试加载简体中文字体，
+                        // 否则汉化文本会渲染成方块。拉丁字符仍走 stdFont，不受影响。
+                        if (R_SUCCEEDED(plGetSharedFontByType(&localFontData, PlSharedFontType_ChineseSimplified))) {
+                            this->m_hasLocalFont = true;
+                        } else {
+                            this->m_hasLocalFont = false;
+                        } 
                         break;
                     }
 
@@ -1597,7 +1603,7 @@ namespace tsl {
 
                 renderer->drawRect(15, tsl::cfg::FramebufferHeight - 73, tsl::cfg::FramebufferWidth - 30, 1, a(tsl::style::color::ColorText));
 
-                renderer->drawString("\uE0E1  Back     \uE0E0  OK", false, 30, 693, 23, a(tsl::style::color::ColorText));
+                renderer->drawString("\uE0E1  返回     \uE0E0  确定", false, 30, 693, 23, a(tsl::style::color::ColorText));
 
                 if (this->m_contentElement != nullptr)
                     this->m_contentElement->frame(renderer);
@@ -1691,7 +1697,7 @@ namespace tsl {
 
                 renderer->drawRect(15, tsl::cfg::FramebufferHeight - 73, tsl::cfg::FramebufferWidth - 30, 1, a(tsl::style::color::ColorText));
 
-                renderer->drawString("\uE0E1  Back     \uE0E0  OK", false, 30, 693, 23, a(tsl::style::color::ColorText));
+                renderer->drawString("\uE0E1  返回     \uE0E0  确定", false, 30, 693, 23, a(tsl::style::color::ColorText));
 
                 if (this->m_header != nullptr)
                     this->m_header->frame(renderer);

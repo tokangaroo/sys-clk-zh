@@ -72,7 +72,7 @@ static inline const char* sysclkFormatModule(SysClkModule module, bool pretty)
         case SysClkModule_GPU:
             return pretty ? "GPU" : "gpu";
         case SysClkModule_MEM:
-            return pretty ? "Memory" : "mem";
+            return pretty ? "内存" : "mem";
         default:
             return NULL;
     }
@@ -87,7 +87,7 @@ static inline const char* sysclkFormatThermalSensor(SysClkThermalSensor thermSen
         case SysClkThermalSensor_PCB:
             return pretty ? "PCB" : "pcb";
         case SysClkThermalSensor_Skin:
-            return pretty ? "Skin" : "skin";
+            return pretty ? "外壳" : "skin";
         default:
             return NULL;
     }
@@ -98,9 +98,9 @@ static inline const char* sysclkFormatPowerSensor(SysClkPowerSensor powSensor, b
     switch(powSensor)
     {
         case SysClkPowerSensor_Now:
-            return pretty ? "Now" : "now";
+            return pretty ? "当前" : "now";
         case SysClkPowerSensor_Avg:
-            return pretty ? "Avg" : "avg";
+            return pretty ? "平均" : "avg";
         default:
             return NULL;
     }
@@ -111,15 +111,15 @@ static inline const char* sysclkFormatProfile(SysClkProfile profile, bool pretty
     switch(profile)
     {
         case SysClkProfile_Docked:
-            return pretty ? "Docked" : "docked";
+            return pretty ? "底座" : "docked";
         case SysClkProfile_Handheld:
-            return pretty ? "Handheld" : "handheld";
+            return pretty ? "掌机" : "handheld";
         case SysClkProfile_HandheldCharging:
-            return pretty ? "Charging" : "handheld_charging";
+            return pretty ? "充电" : "handheld_charging";
         case SysClkProfile_HandheldChargingUSB:
-            return pretty ? "USB Charger" : "handheld_charging_usb";
+            return pretty ? "USB 充电" : "handheld_charging_usb";
         case SysClkProfile_HandheldChargingOfficial:
-            return pretty ? "Official Charger" : "handheld_charging_official";
+            return pretty ? "原装充电" : "handheld_charging_official";
         default:
             return NULL;
     }

@@ -48,7 +48,7 @@ StatusTab::StatusTab(RefreshTask *refreshTask) :
     this->setMarginBottom(0);
 
     // Enabled option
-    brls::ToggleListItem *serviceEnabledListItem = new brls::ToggleListItem("Enable service", context.enabled, "", "Yes", "No");
+    brls::ToggleListItem *serviceEnabledListItem = new brls::ToggleListItem("启用服务", context.enabled, "", "开", "关");
 
     serviceEnabledListItem->getClickEvent()->subscribe([this, serviceEnabledListItem](View* view)
     {
@@ -70,7 +70,7 @@ StatusTab::StatusTab(RefreshTask *refreshTask) :
     this->addView(serviceEnabledListItem);
 
     // Frequencies
-    brls::Header *freqsHeader = new brls::Header("Frequencies");
+    brls::Header *freqsHeader = new brls::Header("频率");
     this->addView(freqsHeader);
 
     brls::BoxLayout *freqsBox = new brls::BoxLayout(brls::BoxLayoutOrientation::VERTICAL);
@@ -107,13 +107,13 @@ StatusTab::StatusTab(RefreshTask *refreshTask) :
     freqsBox->addView(realFreqsLayout);
 
     // Temperatures
-    brls::Header *temperaturesHeader = new brls::Header("Temperatures");
+    brls::Header *temperaturesHeader = new brls::Header("温度");
     this->addView(temperaturesHeader);
     StatusGrid *tempsLayout = new StatusGrid();
     tempsLayout->setSpacing(22);
     tempsLayout->setHeight(40);
 
-    this->skinTempCell = new StatusCell("Skin", formatTemp(context.temps[SysClkThermalSensor_Skin]));
+    this->skinTempCell = new StatusCell("外壳", formatTemp(context.temps[SysClkThermalSensor_Skin]));
     this->socTempCell = new StatusCell("SOC", formatTemp(context.temps[SysClkThermalSensor_SOC]));
     this->pcbTempCell = new StatusCell("PCB", formatTemp(context.temps[SysClkThermalSensor_PCB]));
 
@@ -133,14 +133,14 @@ StatusTab::StatusTab(RefreshTask *refreshTask) :
     this->addView(tempsLayout);
 
     // Power
-    brls::Header *powerHeader = new brls::Header("Power");
+    brls::Header *powerHeader = new brls::Header("功耗");
     this->addView(powerHeader);
     StatusGrid *powerLayout = new StatusGrid();
     powerLayout->setSpacing(22);
     powerLayout->setHeight(40);
 
-    this->nowPowerCell = new StatusCell("Now", formatPower(context.power[SysClkPowerSensor_Now]));
-    this->avgPowerCell = new StatusCell("Avg", formatPower(context.power[SysClkPowerSensor_Avg]));
+    this->nowPowerCell = new StatusCell("当前", formatPower(context.power[SysClkPowerSensor_Now]));
+    this->avgPowerCell = new StatusCell("平均", formatPower(context.power[SysClkPowerSensor_Avg]));
 
     powerLayout->addView(new StatusCell("", ""));
     powerLayout->addView(this->nowPowerCell);
@@ -149,15 +149,15 @@ StatusTab::StatusTab(RefreshTask *refreshTask) :
     this->addView(powerLayout);
 
     // Info
-    brls::Header *systemHeader = new brls::Header("System");
+    brls::Header *systemHeader = new brls::Header("系统");
     this->addView(systemHeader);
 
     InfoGrid *infoLayout = new InfoGrid();
     infoLayout->setSpacing(22);
     infoLayout->setHeight(40);
 
-    this->profileCell   = new StatusCell("Profile", formatProfile(context.profile));
-    this->tidCell       = new StatusCell("Application ID", formatTid(context.applicationId));
+    this->profileCell   = new StatusCell("当前配置", formatProfile(context.profile));
+    this->tidCell       = new StatusCell("游戏 ID", formatTid(context.applicationId));
 
     infoLayout->addView(this->profileCell);
     infoLayout->addView(this->tidCell);

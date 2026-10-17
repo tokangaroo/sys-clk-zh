@@ -106,13 +106,13 @@ brls::SelectListItem* createFreqListItem(SysClkModule module, uint32_t selectedF
     switch (module)
     {
         case SysClkModule_CPU:
-            name = "CPU Frequency";
+            name = "CPU 频率";
             break;
         case SysClkModule_GPU:
-            name = "GPU Frequency";
+            name = "GPU 频率";
             break;
         case SysClkModule_MEM:
-            name = "MEM Frequency";
+            name = "内存频率";
             break;
         default:
             return nullptr;

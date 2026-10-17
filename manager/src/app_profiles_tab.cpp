@@ -26,60 +26,90 @@
 #include "ipc/ipc.h"
 
 #include <cstring>
+#include <cstdio>
+#include <zlib.h>
 
 #include "utils.h"
 
-#define PROFILE_BADGE "\uE3E0"
+// [21.0.0+] 起，NACP 可以把 16 个语言条目整体 DEFLATE 压缩（wbits = -15）
+// 存放在 lang_data 这个 union 里，并把 titles_data_format 置为 1。
+// 本仓库为绕过编译问题回退到了 2.0.1 的列表逻辑，它不认识这种格式，
+// 会把压缩数据当字符串读，结果只显示一两个乱码字符（例如 "E"）。
+//
+// 这里按 NACP 的固定 ABI 布局直接读字节偏移，不依赖 libnx 是否暴露该成员：
+//   0x0000  NacpLanguageEntry[16] | { u16 buffer_size; u8 buffer[0x2FFE]; }
+//   0x3215  u8 titles_data_format
+// 偏移由 libnx nacp.h 中 reserved_x30f5 / reserved_x318a 等保留字段名交叉校验得出。
+#define NACP_OFF_TITLES_DATA_FORMAT 0x3215
+#define NACP_OFF_LANG_REGION_SIZE   0x3000
+#define NACP_MAX_LANG_ENTRIES       32
 
-#ifdef __SWITCH__
-#include <zlib.h>
+static bool nacpGetLanguageEntryCompat(NacpStruct* nacp, NacpLanguageEntry** out)
+{
+    const u8* raw = reinterpret_cast<const u8*>(nacp);
+    const u8 format = raw[NACP_OFF_TITLES_DATA_FORMAT];
 
-static bool _nacpConvertTitleData(NacpStruct* nacp) {
-    if(nacp->titles_data_format == 0) {
-        return true;
-    }
+    // 旧格式：交给 libnx 处理
+    if (format == 0)
+        return R_SUCCEEDED(nacpGetLanguageEntry(nacp, out)) && *out != nullptr;
 
-    if(nacp->titles_data_format != 1) {
-        brls::Logger::error("unexpected title data format: %u", nacp->titles_data_format);
+    if (format != 1)
         return false;
-    }
 
-    NacpLanguageEntry tmp[32];
+    static NacpLanguageEntry decompressed[NACP_MAX_LANG_ENTRIES];
+    static NacpStruct scratch;
+
+    const u16 compressedSize = *reinterpret_cast<const u16*>(raw);
+
     z_stream stream = {};
-    stream.avail_out = sizeof(tmp);
-    stream.next_out = (Bytef*)tmp;
-    stream.avail_in = nacp->lang_data.compressed_data.buffer_size;
-    stream.next_in = nacp->lang_data.compressed_data.buffer;
+    stream.next_in   = const_cast<Bytef*>(raw + sizeof(u16));
+    stream.avail_in  = compressedSize;
+    stream.next_out  = reinterpret_cast<Bytef*>(decompressed);
+    stream.avail_out = sizeof(decompressed);
 
-    int ret = inflateInit2(&stream, -15);
-    if(ret != Z_OK) {
-        brls::Logger::error("inflateInit2: [%d] %s", ret, stream.msg);
+    if (inflateInit2(&stream, -15) != Z_OK)
         return false;
-    }
 
-    ret = inflate(&stream, Z_FINISH);
+    const int ret = inflate(&stream, Z_FINISH);
     inflateEnd(&stream);
 
-    if(ret != Z_STREAM_END) {
-        brls::Logger::error("inflate: [%d] %s", ret, stream.msg);
+    if (ret != Z_STREAM_END)
         return false;
+
+    // 用解压结果顶替语言区，再交给 libnx 自己的语言选择与回退逻辑
+    memcpy(&scratch, nacp, sizeof(scratch));
+    memcpy(&scratch, decompressed, NACP_OFF_LANG_REGION_SIZE);
+    reinterpret_cast<u8*>(&scratch)[NACP_OFF_TITLES_DATA_FORMAT] = 0;
+
+    return R_SUCCEEDED(nacpGetLanguageEntry(&scratch, out)) && *out != nullptr;
+}
+
+// 名称兜底：解压失败或内容异常时改用 Title ID，避免显示乱码
+static bool nacpNameLooksValid(const char* name)
+{
+    if (!name)
+        return false;
+
+    const size_t len = strlen(name);
+    if (len < 2)
+        return false;
+
+    for (size_t i = 0; i < len; i++)
+    {
+        const unsigned char c = (unsigned char)name[i];
+        if (c < 0x20 || c == 0x7F)
+            return false;
     }
 
-    nacp->titles_data_format = 0;
-    memcpy(nacp->lang_data.lang, tmp, sizeof(nacp->lang_data.lang));
     return true;
 }
-#else
-static bool _nacpConvertTitleData(NacpStruct* nacp) {
-    return true;
-}
-#endif
 
+#define PROFILE_BADGE "\uE3E0"
 
 AppProfilesTab::AppProfilesTab()
 {
     // Filter toggle
-    this->filterListItem = new brls::ToggleListItem("Show applications with no profile", this->showEmptyProfiles, "", "Yes", "No");
+    this->filterListItem = new brls::ToggleListItem("显示未配置的游戏", this->showEmptyProfiles, "", "开", "关");
     filterListItem->getClickEvent()->subscribe([this](View* v)
     {
         this->refreshFilter();
@@ -123,21 +153,8 @@ AppProfilesTab::AppProfilesTab()
             break;
         }
 
-        // Decompress lang entries if required (fixes garbled text for updated titles like BOTW on 21.0.0+)
-        if(!_nacpConvertTitleData(&controlData.nacp)) {
-            break;
-        }
-
-        // Language entry
-        rc = nacpGetLanguageEntry(&controlData.nacp, &langEntry);
-        if (R_FAILED(rc))
-        {
-            errorResult("nacpGetLanguageEntry", rc);
-            break;
-        }
-
-        // Name
-        if (!langEntry->name[0])
+        // Language entry（[21.0.0+] 可能为压缩存储，失败时只跳过该条目）
+        if (!nacpGetLanguageEntryCompat(&controlData.nacp, &langEntry))
         {
             i++;
             continue;
@@ -147,7 +164,10 @@ AppProfilesTab::AppProfilesTab()
         title->tid = tid;
 
         memset(title->name, 0, sizeof(title->name));
-        strncpy(title->name, langEntry->name, sizeof(title->name)-1);
+        if (nacpNameLooksValid(langEntry->name))
+            strncpy(title->name, langEntry->name, sizeof(title->name)-1);
+        else
+            snprintf(title->name, sizeof(title->name), "%016lX", tid);
 
         memcpy(title->icon, controlData.icon, sizeof(title->icon));
 

@@ -67,7 +67,7 @@ AppProfileFrame::AppProfileFrame(Title* title) : ThumbnailFrame(), title(title)
         else
         {
             errorResult("sysclkIpcSetProfiles", rc);
-            brls::Application::notify("An error occured while saving the profile - see logs for more details");
+            brls::Application::notify("保存配置失败，详见日志");
         }
     });
 
@@ -132,7 +132,7 @@ void AppProfileFrame::addFreqs(brls::List* list, SysClkProfile profile)
 void AppProfileFrame::onProfileChanged()
 {
     this->getSidebar()->getButton()->setState(brls::ButtonState::ENABLED);
-    this->updateActionHint(brls::Key::B, "Cancel");
+    this->updateActionHint(brls::Key::B, "取消");
 }
 
 bool AppProfileFrame::onCancel()
@@ -145,7 +145,7 @@ bool AppProfileFrame::onCancel()
             dialog->close();
         });
 
-        dialog->addButton("Yes", [dialog](brls::View* view){
+        dialog->addButton("是", [dialog](brls::View* view){
             dialog->close([](){
                 brls::Application::popView(brls::ViewAnimation::SLIDE_RIGHT);
             });

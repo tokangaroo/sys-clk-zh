@@ -23,10 +23,10 @@ void FatalGui::openWithResultCode(std::string tag, Result rc)
     info.append(rcStr, snprintf(rcStr, sizeof(rcStr), "\n\n[0x%x] %04d-%04d", rc, R_MODULE(rc), R_DESCRIPTION(rc)));
 
     tsl::changeTo<FatalGui>(
-        "Could not connect to sys-clk.\n\n"
+        "无法连接到 sys-clk。\n\n"
         "\n"
-        "Please make sure everything is\n\n"
-        "correctly installed and enabled.",
+        "请确认系统模块已正确\n\n"
+        "安装并启用。",
         info
     );
 }
@@ -35,7 +35,7 @@ tsl::elm::Element* FatalGui::baseUI()
 {
     tsl::elm::CustomDrawer* drawer = new tsl::elm::CustomDrawer([this](tsl::gfx::Renderer* renderer, u16 x, u16 y, u16 w, u16 h) {
         renderer->drawString("\uE150", false, 40, 210, 40, TEXT_COLOR);
-        renderer->drawString("Fatal error", false, 100, 210, 30, TEXT_COLOR);
+        renderer->drawString("致命错误", false, 100, 210, 30, TEXT_COLOR);
 
         std::uint32_t txtY = 255;
         if(!this->message.empty())

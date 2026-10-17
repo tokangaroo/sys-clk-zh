@@ -41,10 +41,10 @@ AdvancedSettingsTab::AdvancedSettingsTab()
     // Create UI
 
     // Disclaimer
-    this->addView(new brls::Label(brls::LabelStyle::REGULAR, "\uE140  Please only alter these settings if you know what you are doing.", true));
+    this->addView(new brls::Label(brls::LabelStyle::REGULAR, "\uE140  不熟悉这些设置请勿随意修改。", true));
 
     // Temporary overrides
-    this->addView(new brls::Header("Temporary overrides"));
+    this->addView(new brls::Header("临时超频"));
 
     // CPU
     brls::SelectListItem *cpuFreqListItem = createFreqListItem(SysClkModule_CPU, context.overrideFreqs[SysClkModule_CPU] / 1000000);
@@ -97,7 +97,7 @@ AdvancedSettingsTab::AdvancedSettingsTab()
     this->addView(memFreqListItem);
 
     // Config
-    this->addView(new brls::Header("Configuration"));
+    this->addView(new brls::Header("配置"));
 
     // Logging
     // TODO: add a logger view and put the button to enter it here
@@ -128,7 +128,7 @@ AdvancedSettingsTab::AdvancedSettingsTab()
                 // Validate the value
                 if (value < 0)
                 {
-                    brls::Application::notify("\uE5CD Couldn't save configuration: invalid value (is negative)");
+                    brls::Application::notify("\uE5CD 保存失败：数值不能为负");
                     configItem->setValue(std::to_string(this->configValues.values[config]));
                     return;
                 }
@@ -137,7 +137,7 @@ AdvancedSettingsTab::AdvancedSettingsTab()
 
                 if (!sysclkValidConfigValue(config, uvalue))
                 {
-                    brls::Application::notify("\uE5CD Couldn't save configuration: invalid value");
+                    brls::Application::notify("\uE5CD 保存失败：数值无效");
                     configItem->setValue(std::to_string(this->configValues.values[config]));
                     return;
                 }
@@ -146,7 +146,7 @@ AdvancedSettingsTab::AdvancedSettingsTab()
                 this->configValues.values[config] = uvalue;
                 sysclkIpcSetConfigValues(&this->configValues);
 
-                brls::Application::notify("\uE14B Configuration saved");
+                brls::Application::notify("\uE14B 配置已保存");
             }
             catch(const std::exception& e)
             {
@@ -163,15 +163,15 @@ std::string AdvancedSettingsTab::getDescriptionForConfig(SysClkConfigValue confi
     switch (config)
     {
         case SysClkConfigValue_CsvWriteIntervalMs:
-            return "How often to update /config/sys-clk/context.csv (in milliseconds)\n\uE016  Use 0 to disable";
+            return "每隔多久写入一次 /config/sys-clk/context.csv（毫秒）\n\uE016  填 0 关闭";
         case SysClkConfigValue_TempLogIntervalMs:
-            return "How often to log temperatures (in milliseconds)\n\uE016  Use 0 to disable";
+            return "每隔多久记录一次温度（毫秒）\n\uE016  填 0 关闭";
         case SysClkConfigValue_FreqLogIntervalMs:
-            return "How often to log real frequencies (in milliseconds)\n\uE016  Use 0 to disable";
+            return "每隔多久记录一次实际频率（毫秒）\n\uE016  填 0 关闭";
         case SysClkConfigValue_PowerLogIntervalMs:
-            return "How often to log power consumption (in milliseconds)\n\uE016  Use 0 to disable";
+            return "每隔多久记录一次功耗（毫秒）\n\uE016  填 0 关闭";
         case SysClkConfigValue_PollingIntervalMs:
-            return "How fast to check and apply profiles (in milliseconds)";
+            return "每隔多久检查并应用一次配置（毫秒）";
         default:
             return "";
     }

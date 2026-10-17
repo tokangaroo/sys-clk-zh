@@ -1,0 +1,67 @@
+name: Build (Simplified Chinese)
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # fetch-depth: 0 才能拿到上游标签，用来推导版本号
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # 版本号取最近的上游标签（本分支基于 2.0.1），与官方发行版显示一致
+      - name: Resolve version
+        id: ver
+        run: echo "value=$(git describe --tags --abbrev=0)" >> "$GITHUB_OUTPUT"
+
+      # overlay 只需要 devkitA64 + libnx，官方镜像自带
+      - name: Build overlay
+        env:
+          VER: ${{ steps.ver.outputs.value }}
+        run: |
+          docker run --rm -e VER="$VER" \
+            -v "$PWD":/src -w /src/overlay \
+            devkitpro/devkita64:latest \
+            bash -c 'echo "--- toolchain ---"; aarch64-none-elf-g++ --version | head -1; echo "--- version: $VER ---"; make -j"$(nproc)" TARGET_VERSION="$VER"'
+
+      - name: Collect overlay
+        run: |
+          sudo chown -R "$(id -u):$(id -g)" overlay/out
+          ls -lh overlay/out/
+
+      # 先单独上传 overlay，manager 失败也能拿到 overlay
+      - name: Upload overlay
+        uses: actions/upload-artifact@v4
+        with:
+          name: sys-clk-overlay-zh
+          path: overlay/out/sys-clk-overlay.ovl
+          if-no-files-found: error
+
+      # manager 用 borealis，链接 -lglfw3 -lEGL -lglapi -ldrm_nouveau -lz
+      # 依赖探测与安装逻辑在 ci/build-manager.sh
+      - name: Build manager
+        env:
+          VER: ${{ steps.ver.outputs.value }}
+        run: |
+          docker run --rm -e VER="$VER" \
+            -v "$PWD":/src -w /src/manager \
+            devkitpro/devkita64:latest \
+            bash /src/ci/build-manager.sh
+
+      - name: Collect manager
+        run: |
+          sudo chown -R "$(id -u):$(id -g)" manager/sys-clk-manager.nro 2>/dev/null || true
+          ls -lh manager/*.nro
+
+      - name: Upload manager
+        uses: actions/upload-artifact@v4
+        with:
+          name: sys-clk-manager-zh
+          path: manager/sys-clk-manager.nro
+          if-no-files-found: error

@@ -12,6 +12,17 @@
 
 #include "fatal_gui.h"
 
+// 以「数值列 x 坐标」为锚点，按实际渲染宽度把标签右对齐到数值左侧。
+// 这样标签换成中文后宽度变化也能自动贴合，不用手工调坐标。
+static inline void drawRightLabel(tsl::gfx::Renderer* renderer, const char* text,
+                                  std::uint32_t valueX, std::uint32_t posY)
+{
+    std::uint32_t w = renderer->drawString(text, false, 0, 0, SMALL_TEXT_SIZE,
+                                           tsl::style::color::ColorTransparent).first;
+    renderer->drawString(text, false, valueX > w ? valueX - w : 0u, posY,
+                         SMALL_TEXT_SIZE, DESC_COLOR);
+}
+
 BaseMenuGui::BaseMenuGui()
 {
     this->context = nullptr;
@@ -35,11 +46,11 @@ void BaseMenuGui::preDraw(tsl::gfx::Renderer* renderer)
         char buf[32];
         std::uint32_t y = 85;
 
-        renderer->drawString("App ID: ", false, 20, y, SMALL_TEXT_SIZE, DESC_COLOR);
+        drawRightLabel(renderer, "游戏ID:", 81, y);
         snprintf(buf, sizeof(buf), "%016lX", context->applicationId);
         renderer->drawString(buf, false, 81, y, SMALL_TEXT_SIZE, VALUE_COLOR);
 
-        renderer->drawString("Profile: ", false, 246, y, SMALL_TEXT_SIZE, DESC_COLOR);
+        drawRightLabel(renderer, "配置:", 302, y);
         renderer->drawString(sysclkFormatProfile(context->profile, true), false, 302, y, SMALL_TEXT_SIZE, VALUE_COLOR);
 
         y += 30;
@@ -60,9 +71,9 @@ void BaseMenuGui::preDraw(tsl::gfx::Renderer* renderer)
             snprintf(buf, sizeof(buf), "%u.%u MHz", hz / 1000000, hz / 100000 - hz / 1000000 * 10);
             renderer->drawString(buf, false, freqOffsets[i].x, y, SMALL_TEXT_SIZE, VALUE_COLOR);
         }
-        renderer->drawString("CPU:", false, 20, y, SMALL_TEXT_SIZE, DESC_COLOR);
-        renderer->drawString("GPU:", false, 162, y, SMALL_TEXT_SIZE, DESC_COLOR);
-        renderer->drawString("MEM:", false, 295, y, SMALL_TEXT_SIZE, DESC_COLOR);
+        drawRightLabel(renderer, "CPU:", 61, y);
+        drawRightLabel(renderer, "GPU:", 204, y);
+        drawRightLabel(renderer, "MEM:", 342, y);
 
         y += 25;
 
@@ -85,9 +96,9 @@ void BaseMenuGui::preDraw(tsl::gfx::Renderer* renderer)
             { SysClkThermalSensor_Skin, 342 },
         };
 
-        renderer->drawString("SOC:", false, 20, y, SMALL_TEXT_SIZE, DESC_COLOR);
-        renderer->drawString("PCB:", false, 166, y, SMALL_TEXT_SIZE, DESC_COLOR);
-        renderer->drawString("Skin:", false, 303, y, SMALL_TEXT_SIZE, DESC_COLOR);
+        drawRightLabel(renderer, "SOC:", 61, y);
+        drawRightLabel(renderer, "PCB:", 204, y);
+        drawRightLabel(renderer, "外壳:", 342, y);
         for(unsigned int i = 0; i < SysClkModule_EnumMax; i++)
         {
             std::uint32_t millis = this->context->temps[tempOffsets[i].s];
@@ -106,10 +117,10 @@ void BaseMenuGui::preDraw(tsl::gfx::Renderer* renderer)
             { SysClkPowerSensor_Avg, 342 },
         };
 
-        renderer->drawString("Battery Power", false, 20, y, SMALL_TEXT_SIZE, DESC_COLOR);
+        renderer->drawString("电池功率", false, 20, y, SMALL_TEXT_SIZE, DESC_COLOR);
 
-        renderer->drawString("Now:", false, 160, y, SMALL_TEXT_SIZE, DESC_COLOR);
-        renderer->drawString("Avg:", false, 304, y, SMALL_TEXT_SIZE, DESC_COLOR);
+        drawRightLabel(renderer, "当前:", 204, y);
+        drawRightLabel(renderer, "平均:", 342, y);
         for(unsigned int i = 0; i < SysClkPowerSensor_EnumMax; i++)
         {
             std::uint32_t mw = this->context->power[powerOffsets[i].s];

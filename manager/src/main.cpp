@@ -35,7 +35,7 @@ int main(int argc, char* argv[])
     // Init the app
     if (!brls::Application::init(APP_TITLE))
     {
-        brls::Logger::error("Unable to init Borealis application");
+        brls::Logger::error("无法初始化 Borealis 界面");
         return EXIT_FAILURE;
     }
 
@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
 
     if (brls::Application::loadFont(LOGO_FONT_NAME, LOGO_FONT_PATH) < 0)
     {
-        brls::Logger::error("failed to load logo font");
+        brls::Logger::error("加载 logo 字体失败");
     }
 
     uint32_t apiVersion;
@@ -54,24 +54,24 @@ int main(int argc, char* argv[])
     // Check that sys-clk is running
     if (!sysclkIpcRunning())
     {
-        brls::Logger::error("sys-clk is not running");
-        brls::Application::crash("sys-clk does not seem to be running, please check that it is correctly installed and enabled.");
+        brls::Logger::error("sys-clk 未在运行");
+        brls::Application::crash("sys-clk 似乎没有运行，请确认已正确安装并启用。");
     }
     // Initialize sys-clk IPC client
     else if (R_FAILED(sysclkIpcInitialize()) || R_FAILED(sysclkIpcGetAPIVersion(&apiVersion)))
     {
-        brls::Logger::error("Unable to initialize sys-clk IPC client");
-        brls::Application::crash("Could not connect to sys-clk, please check that it is correctly installed and enabled.");
+        brls::Logger::error("无法初始化 sys-clk IPC 客户端");
+        brls::Application::crash("无法连接到 sys-clk，请确认已正确安装并启用。");
     }
     else if (SYSCLK_IPC_API_VERSION != apiVersion)
     {
         brls::Logger::error("sys-clk IPC API version mismatch (expected: %u; actual: %u)", SYSCLK_IPC_API_VERSION, apiVersion);
-        brls::Application::crash("The manager is not compatible with the currently running sysmodule of sys-clk, please check that you have correctly installed the latest version (reboot?).");
+        brls::Application::crash("管理器与当前运行的 sys-clk 系统模块版本不兼容，请确认已安装最新版本（可能需要重启）。");
     }
     else if (R_FAILED(cacheFreqList()))
     {
-        brls::Logger::error("Failed to get the freq list from sys-clk");
-        brls::Application::crash("Failed to get the freq list from sys-clk, please check that you have correctly installed the latest version (reboot?).");
+        brls::Logger::error("无法从 sys-clk 获取频率列表");
+        brls::Application::crash("无法从 sys-clk 获取频率列表，请确认已安装最新版本（可能需要重启）。");
     }
     else
     {
@@ -84,8 +84,8 @@ int main(int argc, char* argv[])
         }
         else
         {
-            brls::Logger::error("Unable to get sys-clk version string");
-            brls::Application::setCommonFooter("[unknown]");
+            brls::Logger::error("无法获取 sys-clk 版本号");
+            brls::Application::setCommonFooter("[未知]");
         }
 
 
